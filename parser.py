@@ -1,74 +1,84 @@
 import re
 import pandas as pd
+import os
+# Loop through HTML files in the directory and parse each one
 
-html = """
-<div class="container-flow box-header box-header--no-margin box-header--bigger">1. kolo</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__scoreboard"><div class="row"><div class="col-xs-12 game__scoreboard__date visible-xs text-center">sobota 16.07.2016, 19:00 | Mestský futbalový štadión</div><div class="game__scoreboard__team game__scoreboard__team--home"><div class="game__scoreboard__logo"><a href="/tim/2016/1-mfk-zemplin-michalovce"><img src="/photo/team/team_1.png" alt=""></a></div><div class="game__scoreboard__name">
-                  <a href="/tim/2016/1-mfk-zemplin-michalovce">
-                    <span class="hidden-xs">MFK Zemplín Michalovce</span>
-                    <span class="visible-xs">MIC</span>
-                    </a>
-                </div></div><div class="game__scoreboard__score"><div class="game__scoreboard__date hidden-xs">sobota 16.07.2016, 19:00</div><div class="game__scoreboard__stadium hidden-xs">Mestský futbalový štadión</div><div class="game__scoreboard__fulltime ">2:1</div><div class="game__scoreboard__halftime">(1:0)</div></div><div class="game__scoreboard__team game__scoreboard__team--away"><div class="game__scoreboard__logo"><a href="/tim/2016/2-as-trencin"><img src="/photo/team/team_2.png" alt=""></a></div><div class="game__scoreboard__name">
-                  <a href="/tim/2016/2-as-trencin">
-                    <span class="hidden-xs">AS Trenčín</span>
-                    <span class="visible-xs">TRE</span>
-                    </a>
-                </div></div></div></div><!--/.game__scoreboard--></div><!--/.row--></div><!--/.subpage--><div class="container-flow box-header box-header--no-margin box-header--bigger box-header--grey">Góly</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__goals"><div class="row"><div class="col-xs-12 col-sm-6"><div class="visible-xs game__goals__team-header">Domáci</div><div class="game__goals__item"><a href="/hrac/51-igor-zofcak" title=""><i class="ico ico-ball"></i><span class="hidden-xs">Igor</span> Žofčák</a> (37“)</div><div class="game__goals__item"><a href="/hrac/52-david-skutka" title=""><i class="ico ico-ball"></i><span class="hidden-xs">Dávid</span> Škutka</a> (57“)</div></div><div class="col-xs-12 col-sm-6"><div class="visible-xs game__goals__team-header">Hostia</div><div class="game__goals__item"><a href="/hrac/69-aliko-mohammad-bala" title=""><i class="ico ico-ball"></i><span class="hidden-xs">Aliko Mohammad</span> Bala</a> (83“)</div></div></div></div><!--/.game__goals--></div><!--/.row--></div><!--/.subpage--><div class="container-flow box-header box-header--no-margin box-header--bigger box-header--grey">Karty</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__cards"><div class="row"><div class="col-xs-12 col-sm-6"><div class="visible-xs game__cards__team-header">Domáci</div><div class="game__cards__item"><a href="/hrac/8-milan-simcak" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Milan</span> Šimčák</a> (44“)</div><div class="game__cards__item"><a href="/hrac/11-dominik-kunca" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Dominik</span> Kunca</a> (85“)</div><div class="game__cards__item"><a href="/hrac/13-martin-koscelnik" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Martin</span> Koscelník</a> (90“)</div></div><div class="col-xs-12 col-sm-6"><div class="visible-xs game__cards__team-header">Hostia</div><div class="game__cards__item"><a href="/hrac/65-maduka-christopher-udeh" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Maduka Christopher</span> Udeh</a> (27“)</div><div class="game__cards__item"><a href="/hrac/66-denis-janco" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Denis</span> Jančo</a> (40“)</div><div class="game__cards__item"><a href="/hrac/67-peter-klescik" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">Peter</span> Kleščík</a> (90“)</div></div></div></div><!--/.game__cards--></div><!--/.row--></div><!--/.subpage--><div class="container-flow box-header box-header--no-margin box-header--bigger box-header--grey">Zostavy</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__roster"><div class="row"><div class="col-xs-12 col-sm-6"><div class="game__roster__team-logo"><img src="/photo/team/team_1.png" alt=""></div><div class="game__roster__team-name"><a href="/tim/2016/1-mfk-zemplin-michalovce">
-                  <span class="hidden-xs">MFK Zemplín Michalovce</span>
-                  <span class="visible-xs">MIC</span>
-                  </a></div><div class="typography table-responsive"><table><tr><th></th><th>#</th><th>P</th><th>Meno</th><th>G</th><th>A</th><th>ŽK</th><th>ČK</th></tr><tr><td class="sub"></td><td>16</td><td>B</td><td class="name"><a href="/hrac/49-patrik-macej">Patrik Macej</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>23</td><td>O</td><td class="name"><a href="/hrac/8-milan-simcak">Milan Šimčák</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub"></td><td>7</td><td>O</td><td class="name"><a href="/hrac/50-marcos-calero-perez">Marcos Calero Perez</a></td><td></td><td><i class="ico ico-assist"></i></td><td></td><td></td></tr><tr><td class="sub"></td><td>81</td><td>O</td><td class="name"><a href="/hrac/2100-vernon-de-marco-morlacchi">Vernon De Marco Morlacchi</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>51</td><td>S</td><td class="name"><a href="/hrac/10-stanislav-danko">Stanislav Danko</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>24</td><td>S</td><td class="name"><a href="/hrac/13-martin-koscelnik">Martin Koscelník</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub"></td><td>8</td><td>S</td><td class="name"><a href="/hrac/14-tomas-sedlak">Tomáš Sedlák</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>8</td><td>S</td><td class="name"><a href="/hrac/19-jakub-gric">Jakub Grič</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">72“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-out" title="72. minuta"></i></td><td>10</td><td>S</td><td class="name"><a href="/hrac/51-igor-zofcak">Igor Žofčák</a></td><td><i class="ico ico-ball"></i></td><td></td><td></td><td></td></tr><tr><td class="sub">89“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-out" title="89. minuta"></i></td><td>9</td><td>U</td><td class="name"><a href="/hrac/11-dominik-kunca">Dominik Kunca</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub">78“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-out" title="78. minuta"></i></td><td>33</td><td>U</td><td class="name"><a href="/hrac/52-david-skutka">Dávid Škutka</a></td><td><i class="ico ico-ball"></i></td><td></td><td></td><td></td></tr><tr><td colspan="7">&nbsp;</td></tr><tr><td class="sub"></td><td>22</td><td>B</td><td class="name"><a href="/hrac/22-matus-kira">Matúš Kira</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>6</td><td>O</td><td class="name"><a href="/hrac/53-michal-janocko">Michal Janočko</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>11</td><td>S</td><td class="name"><a href="/hrac/54-adrian-lesko">Adrián Leško</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>12</td><td>S</td><td class="name"><a href="/hrac/55-jozef-simon-turik">Jozef-Šimon Turík</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">72“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-in" title="72. minuta"></i></td><td>66</td><td>S</td><td class="name"><a href="/hrac/56-martin-bednar">Martin Bednár</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">78“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-in" title="78. minuta"></i></td><td>21</td><td>U</td><td class="name"><a href="/hrac/21-michal-hamulak">Michal Hamuľak</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">89“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-in" title="89. minuta"></i></td><td>28</td><td>U</td><td class="name"><a href="/hrac/23-pavol-bellas">Pavol Bellás</a></td><td></td><td></td><td></td><td></td></tr></table></div></div><div class="col-xs-12 col-sm-6"><div class="game__roster__team-logo"><img src="/photo/team/team_2.png" alt=""></div><div class="game__roster__team-name"><a href="/tim/2016/2-as-trencin">
-                  <span class="hidden-xs">AS Trenčín</span>
-                  <span class="visible-xs">TRE</span>
-                  </a></div><div class="typography table-responsive"><table><tr><th></th><th>#</th><th>P</th><th>Meno</th><th>G</th><th>A</th><th>ŽK</th><th>ČK</th></tr><tr><td class="sub"></td><td>67</td><td>B</td><td class="name"><a href="/hrac/57-igor-semrinec">Igor Šemrinec</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>18</td><td>O</td><td class="name"><a href="/hrac/58-martin-sulek">Martin Šulek</a></td><td></td><td><i class="ico ico-assist"></i></td><td></td><td></td></tr><tr><td class="sub">65“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-out" title="65. minuta"></i></td><td>13</td><td>O</td><td class="name"><a href="/hrac/62-kingsley-madu">Kingsley Madu</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>5</td><td>O</td><td class="name"><a href="/hrac/65-maduka-christopher-udeh">Maduka Christopher Udeh</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub"></td><td>37</td><td>O</td><td class="name"><a href="/hrac/67-peter-klescik">Peter Kleščík</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub"></td><td>14</td><td>S</td><td class="name"><a href="/hrac/61-jakub-holubek">Jakub Holúbek</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>17</td><td>S</td><td class="name"><a href="/hrac/63-samuel-kalu-ojim">Samuel Kalu Ojim</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>21</td><td>S</td><td class="name"><a href="/hrac/64-matus-bero">Matúš Bero</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">65“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-out" title="65. minuta"></i></td><td>6</td><td>S</td><td class="name"><a href="/hrac/66-denis-janco">Denis Jančo</a></td><td></td><td></td><td><i class="ico ico ico-card yellow"></i></td><td></td></tr><tr><td class="sub"></td><td>10</td><td>S</td><td class="name"><a href="/hrac/2098-rabiu-ibrahim">Rabiu Ibrahim</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>11</td><td>U</td><td class="name"><a href="/hrac/60-rangelo-janga">Rangelo Janga</a></td><td></td><td></td><td></td><td></td></tr><tr><td colspan="7">&nbsp;</td></tr><tr><td class="sub"></td><td>1</td><td>B</td><td class="name"><a href="/hrac/68-matej-vozar">Matej Vozár</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>39</td><td>O</td><td class="name"><a href="/hrac/74-juraj-janosik">Juraj Jánošík</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>6</td><td>S</td><td class="name"><a href="/hrac/70-david-richtarech">Dávid Richtárech</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>19</td><td>S</td><td class="name"><a href="/hrac/71-jamarro-diks">Jamarro Diks</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub"></td><td>22</td><td>S</td><td class="name"><a href="/hrac/73-filip-halgos">Filip Halgoš</a></td><td></td><td></td><td></td><td></td></tr><tr><td class="sub">65“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-in" title="65. minuta"></i></td><td>7</td><td>S</td><td class="name"><a href="/hrac/69-aliko-mohammad-bala">Aliko Mohammad Bala</a></td><td><i class="ico ico-ball"></i></td><td></td><td></td><td></td></tr><tr><td class="sub">65“ <i data-toggle="tooltip" data-placement="top" class="ico ico-sub-in" title="65. minuta"></i></td><td>29</td><td>U</td><td class="name"><a href="/hrac/72-erik-prekop">Erik Prekop</a></td><td></td><td></td><td></td><td></td></tr></table></div></div></div></div><!--/.game__cards--></div><!--/.row--></div><!--/.subpage--><div class="container-flow box-header box-header--no-margin box-header--bigger box-header--grey">Doplňujúce informácie</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__additional"><div>Zápas navštívilo 2788 divákov</div><div>Rozhodcovia: Ivan Kružliak, Tomáš Mókoš, Michal Tomčík</div></div><!--/.game__additional--></div><!--/.row--></div><!--/.subpage--><div class="container-flow box-header box-header--no-margin box-header--bigger box-header--grey">Základné štatistiky</div><div class="container subpage subpage--no-min-height"><div class="row"><div class="col-xs-12 subpage__main game__stats"><div class="hidden-xs"><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:38.638858397366%;"></div><div class="value">352</div></div><div class="stats-name">Prihrávky</div><div class="stats"><div class="bar" style="width:60%;"></div><div class="value">559</div></div></div><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:50.731707317073%;"></div><div class="value">104</div></div><div class="stats-name">Vyhraté súboje</div><div class="stats"><div class="bar" style="width:49.268292682927%;"></div><div class="value">101</div></div></div><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:41.666666666667%;"></div><div class="value">5</div></div><div class="stats-name">Strely na bránku</div><div class="stats"><div class="bar" style="width:58.333333333333%;"></div><div class="value">7</div></div></div><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:60%;"></div><div class="value">3</div></div><div class="stats-name">Ofsajdy</div><div class="stats"><div class="bar" style="width:25%;"></div><div class="value">1</div></div></div><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:50%;"></div><div class="value">16</div></div><div class="stats-name">Fauly</div><div class="stats"><div class="bar" style="width:50%;"></div><div class="value">16</div></div></div><div class="col-xs-12 stats-container"><div class="stats right"><div class="bar" style="width:60%;"></div><div class="value">3</div></div><div class="stats-name">Zákroky brankára</div><div class="stats"><div class="bar" style="width:40%;"></div><div class="value">2</div></div></div></div><div class="visible-xs typography table-responsive"><table><tbody><tr><td>352</td><td class="item">Prihrávky</td><td>559</td><tr><tr><td>104</td><td class="item">Vyhraté súboje</td><td>101</td><tr><tr><td>5</td><td class="item">Strely na bránku</td><td>7</td><tr><tr><td>3</td><td class="item">Ofsajdy</td><td>1</td><tr><tr><td>16</td><td class="item">Fauly</td><td>16</td><tr><tr><td>3</td><td class="item">Zákroky brankára</td><td>2</td><tr></tbody></table></div></div><!--/.game__stats--></div><!--/.row--></div><!--/.subpage-->		
-	</main>
-"""
 
-# Extract information using regular expressions
-match_info = {}
+def parse_matches(html_file_path):
+    print(html_file_path)
+    # Read the HTML content from the local file
+    with open(html_file_path, 'r', encoding='utf-8') as file:
+        html = file.read()
+    # Extract information using regular expressions
+    match_info = {}
 
-# Match information
-match_match = re.search(r'<div class="container-flow box-header box-header--no-margin box-header--bigger">([\d.]+) (.*?)</div>', html)
+    # Match information
+    match_match = re.search(r'<div class="container-flow box-header box-header--no-margin box-header--bigger">([\d.]+) (.*?)</div>', html)
 
-if match_match:
-    match_info['Match'] = match_match.group(2)
 
-# Teams' names
-team_names = re.findall(r'class="hidden-xs">([^<]+)<', html)
-match_info['Home Team'] = team_names[0]
-match_info['Away Team'] = team_names[1]
 
-# Date and Stadium
-date_stadium_match = re.search(r'sobota ([\d.]+), (\d{2}:\d{2}) \| ([^<]+)</div>', html)
-if date_stadium_match:
-    match_info['Date'] = date_stadium_match.group(1)
-    match_info['Time'] = date_stadium_match.group(2)
-    match_info['Stadium'] = date_stadium_match.group(3)
+    # Teams' names
+    team_names = re.findall(r'class="hidden-xs">([^<]+)<', html)
+    match_info['Home Team'] = team_names[0]
+    match_info['Away Team'] = team_names[1]
 
-# Goals and Cards information
-goals_match = re.findall(r'<div class="game__goals__item"><a href="[^"]+" title=""><i class="ico ico-ball"></i><span class="hidden-xs">(.*?)</span> (.*?)</a> \((\d+)“\)</div>', html)
-cards_match = re.findall(r'<div class="game__cards__item"><a href="[^"]+" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">(.*?) (.*?)</span> \((\d+)“\)</div>', html)
+    # Date and Stadium
+    date_stadium_match = re.search(r'([\d.]+), (\d{2}:\d{2}) \| ([^<]+)</div>', html)
+    if date_stadium_match:
+        match_info['Date'] = date_stadium_match.group(1)
+        match_info['Time'] = date_stadium_match.group(2)
+        match_info['Stadium'] = date_stadium_match.group(3)
 
-# Extracted Goals and Cards data
-goals = [f'{player[0]} {player[1]} ({minute})' for player, _, minute in goals_match]
-cards = [f'{player[0]} {player[1]} ({minute})' for player, _, minute in cards_match]
+    # Goals and Cards information
+    goals_match = re.findall(r'<div class="game__goals__item"><a href="[^"]+" title=""><i class="ico ico-ball"></i><span class="hidden-xs">(.*?)</span> (.*?)</a> \((\d+)“\)</div>', html)
+    cards_match = re.findall(r'<div class="game__cards__item"><a href="[^"]+" title=""> <i class="ico ico-card yellow"></i><span class="hidden-xs">(.*?)</span>(.*?)</a> \((\d+)“\)</div>', html)
+    r_cards_match = re.findall(r'<div class="game__cards__item"><a href="[^"]+" title=""> <i class="ico ico-card red"></i><span class="hidden-xs">(.*?)</span>(.*?)</a> \((\d+)“\)</div>', html)
+    # Extracted Goals and Cards data
+    goals = [f'{player} {surname} ({minute})' for player, surname, minute in goals_match]
+    cards = [f'{player} {_} ({minute})' for player, _, minute in cards_match]
+    r_cards = [f'{player} {_} ({minute})' for player, _, minute in r_cards_match]
+    scoreline = re.findall(r'<div class="game__scoreboard__fulltime ">(\d+):(\d+)</div>', html)
+    if len(scoreline) == 0:
+        return
+    match_info['Goals Home'] = scoreline[0][0]
+    match_info['Goals Away'] = scoreline[0][1]
+    # Additional Info
+    additional_info_match = re.findall(r'<div class="game__additional">(.*?)</div>', html)
+    if additional_info_match:
+        spectators_match = re.search(r'(\d+) divákov', additional_info_match[0])
+        if spectators_match:
+            match_info['Additional Info'] = [f'Zápas navštívilo {spectators_match.group(1)} divákov']
+        else:
+            match_info['Additional Info'] = [additional_info_match[0]]
 
-# Additional Info
-additional_info_match = re.findall(r'<div class="game__additional">(.*?)</div>', html)
-if additional_info_match:
-    spectators_match = re.search(r'(\d+) divákov', additional_info_match[0])
-    if spectators_match:
-        match_info['Additional Info'] = [f'Zápas navštívilo {spectators_match.group(1)} divákov']
-    else:
-        match_info['Additional Info'] = [additional_info_match[0]]
 
-# Add the extracted Goals and Cards data to the match_info dictionary
-match_info['Goals'] = goals
-match_info['Cards'] = cards
-print(match_info)
-# Create a DataFrame from the extracted information
-df = pd.DataFrame.from_dict(match_info)
+    # Add the extracted Goals and Cards data to the match_info dictionary
+    match_info['Goals'] = ', '.join(goals)  # Convert the goals list to a comma-separated string
+    match_info['Cards'] = ', '.join(cards)  # Convert the cards list to a comma-separated string
+    match_info['Red Cards'] = ', '.join(r_cards)  # Convert the cards list to a comma-separated string
+    # Create a DataFrame from the extracted information
+    df = pd.DataFrame(match_info, index=['1'])
+    # Save the DataFrame to an Excel file
+    df.to_csv('data.csv', mode='a', index=False)
 
-# Save the DataFrame to an Excel file
-with pd.ExcelWriter('data.xlsx', engine='xlsxwriter') as writer:
-    df.to_excel(writer, sheet_name='matches', index=False)
+    print("Data for match saved.")
+# Specify the directory path containing the HTML files
+directory_path = './nikeliga_data/'
 
-print("Data saved to data.xlsx in the 'matches' sheet.")
+# Define a regular expression pattern for matching filenames
+file_pattern = r'^\d+-[a-zA-Z]{3}-[a-zA-Z]{3}\.html$'
+
+# Loop through HTML files in the directory and parse each one
+i = 1
+for filename in os.listdir(directory_path):
+    if re.match(file_pattern, filename):
+        file_path = os.path.join(directory_path, filename)
+        parse_matches(file_path)
+        print("Number of files processed: ", i)
+        i = i + 1
+read_file = pd.read_csv('data.csv')
+read_file.to_excel('data.xlsx', index=None, header=False)
+
+
+
+
