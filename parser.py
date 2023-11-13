@@ -14,9 +14,6 @@ def parse_matches(html_file_path):
 
     # Match information
     match_match = re.search(r'<div class="container-flow box-header box-header--no-margin box-header--bigger">([\d.]+) (.*?)</div>', html)
-
-
-
     # Teams' names
     team_names = re.findall(r'class="hidden-xs">([^<]+)<', html)
     match_info['Home Team'] = team_names[0]
@@ -59,26 +56,69 @@ def parse_matches(html_file_path):
     # Create a DataFrame from the extracted information
     df = pd.DataFrame(match_info, index=['1'])
     # Save the DataFrame to an Excel file
-    df.to_csv('data.csv', mode='a', index=False)
+    df.to_csv('matches.csv', mode='a', index=False, header=False)
+    #print("Data for match saved.")
 
-    print("Data for match saved.")
-# Specify the directory path containing the HTML files
+
+
+def parse_players(html_file_path):
+    with open(html_file_path, 'r', encoding='utf-8') as file:
+        html_code = file.read()
+    print(html_file_path)
+    # Define regular expressions
+    name_pattern = re.compile(r'<h1.*?><span>(\d+)</span>(.*?)</h1>')
+    team_pattern = re.compile(r'class="player__header__item__value[^"]*"><img src="[^"]*" alt=""><span>(.*?)</span><\/div>', re.DOTALL)
+    position_pattern = re.compile(r'<div class="player__header__item__value player__header__item__value--position">(.*?)</div>')
+    birth_date_pattern = re.compile(r'class="player__header__item__value">(.*?)</div>')
+    age_pattern = re.compile(r'class="player__header__item__value">(.*?)</div>')
+    seasons_pattern = re.compile(r'class="player__career__item__value">(.*?)</div>')
+
+    # Extract player details using regular expressions
+    name_match = name_pattern.search(html_code)
+    team_match = team_pattern.search(html_code)
+    position_match = position_pattern.search(html_code)
+    birth_date_match = birth_date_pattern.search(html_code)
+    age_match = age_pattern.search(html_code)
+    seasons_match = seasons_pattern.findall(html_code)
+
+    # Create a dictionary to store player details
+    player_details = {
+        'name': name_match.group(2).strip() if name_match else None,
+        'team': team_match.group(1).strip() if team_match else None,
+        'position': position_match.group(1).strip() if position_match else None,
+        'birth_date': birth_date_match.group(1).strip() if birth_date_match else None,
+        'age': age_match.group(1).strip() if age_match else None,
+        'seasons': seasons_match[0].strip() if seasons_match else None,
+        'matches': seasons_match[1].strip() if seasons_match else None,
+        'goals': seasons_match[2].strip() if seasons_match else None,
+        'yellow_cards': seasons_match[3].strip() if seasons_match else None,
+        'red_cards': seasons_match[4].strip() if seasons_match else None,
+    }
+    if player_details['name'] != None:
+        df = pd.DataFrame(player_details, index=['1'])
+        # Save the DataFrame to an Excel file
+        df.to_csv('players.csv', mode='a', index=False, header=False)
+        #print("Data for player saved.")
+
 directory_path = './nikeliga_data/'
-
-# Define a regular expression pattern for matching filenames
 file_pattern = r'^\d+-[a-zA-Z]{3}-[a-zA-Z]{3}\.html$'
-
-# Loop through HTML files in the directory and parse each one
 i = 1
+j = 1
 for filename in os.listdir(directory_path):
     if re.match(file_pattern, filename):
         file_path = os.path.join(directory_path, filename)
         parse_matches(file_path)
-        print("Number of files processed: ", i)
+        #print("Number of files processed: ", i)
         i = i + 1
-read_file = pd.read_csv('data.csv')
-read_file.to_excel('data.xlsx', index=None, header=False)
-
-
-
-
+    else:
+        file_path = os.path.join(directory_path, filename)
+        #print(filename)
+        parse_players(file_path)
+        #print("Number of files processed: ", j)
+        j = j + 1
+print("Done! Number of match files processed: ",i,". Number of player files processed: ",j)
+read_file = pd.read_csv('players.csv')
+read_file.to_excel('players.xlsx',index=False, header=["name","team","position","birth_date","age","seasons","matches","goals","yellow_cards","red_cards"], sheet_name='players',)
+read_file = pd.read_csv('matches.csv')
+read_file.to_excel('matches.xlsx',index=False, header=["Home Team","Away Team","Date","Time","Stadium","Goals Home","Goals Away","Goals","Cards","Red Cards"], sheet_name='matches')
+print("All files converted to csv and xlsx files.")
