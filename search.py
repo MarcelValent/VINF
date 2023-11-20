@@ -6,31 +6,62 @@ from org.apache.lucene.store import NIOFSDirectory
 from org.apache.lucene.search import IndexSearcher
 from org.apache.lucene.queryparser.classic import MultiFieldQueryParser
 
-def search_index(index_dir, query_str):
 
+def display_menu():
+    print("Choose an option:")
+    print("1. Goals")
+    print("2. Red Cards")
+    print("3. Yellow Cards")
+
+
+def get_query_field(option):
+    fields = {
+        "1": ["Goals"],
+        "2": ["RedCards"],
+        "3": ["YellowCards"]
+        # Add more options if needed
+    }
+    return fields.get(option, [])
+
+
+def search_index(index_dir, query_str, query_fields):
     fs_directory = NIOFSDirectory(Paths.get(index_dir))
     reader = DirectoryReader.open(fs_directory)
     searcher = IndexSearcher(reader)
 
-    fields = ["HomeTeam", "AwayTeam", "Date", "Time", "Stadium", "GoalsHome", "GoalsAway", "Goals", "Cards", "RedCards"]
     analyzer = StandardAnalyzer()
-    parser = MultiFieldQueryParser(fields,analyzer)
+
+    parser = MultiFieldQueryParser(query_fields, analyzer)
     queries = parser.parse(parser,query_str)
 
     hits = searcher.search(queries, 10)
 
-    print(f"Found {hits.totalHits} document(s) that matched the query '{query_str}':")
+    print(f"Player '{query_str}' has {hits.totalHits} for {query_fields}")
 
-    #for hit in hits.scoreDocs:
-        #doc = searcher.doc(hit.doc)
-        #print(f"Document: HomeTeam={doc.get('HomeTeam')}, AwayTeam={doc.get('AwayTeam')}, Date={doc.get('Date')}, Time={doc.get('Time')}, Stadium={doc.get('Stadium')}, GoalsHome={doc.get('GoalsHome')}, GoalsAway={doc.get('GoalsAway')}, Goals={doc.get('Goals')}, Cards={doc.get('Cards')}, RedCards={doc.get('RedCards')}")
+    for hit in hits.scoreDocs:
+        doc = searcher.doc(hit.doc)
+        print(f"Document: {', '.join([f'{field}={doc.get(field)}' for field in query_fields])}")
+    print("\n\n")
 
     reader.close()
 
 
 if __name__ == "__main__":
     lucene.initVM()
-    index_directory = "./index"  # Change this to the path where you indexed the data
+    index_directory = "./index"
+
     while True:
-        query_string = input("Your search query here: ")  # Modify this with your specific search query
-        search_index(index_directory, query_string)
+        display_menu()
+        option = input("Enter your choice (1-3): ")
+
+        if option not in ["1", "2", "3"]:
+            print("Invalid option. Please choose a valid option.")
+            continue
+
+        query_fields = get_query_field(option)
+        query_string = input("Your keyword to search here: ")
+
+        if query_fields:
+            search_index(index_directory, query_string, query_fields)
+        else:
+            print("Invalid option. Please choose a valid option.")
