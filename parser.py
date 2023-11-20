@@ -70,7 +70,7 @@ def parse_players(html_file_path):
     team_pattern = re.compile(r'class="player__header__item__value[^"]*"><img src="[^"]*" alt=""><span>(.*?)</span><\/div>', re.DOTALL)
     position_pattern = re.compile(r'<div class="player__header__item__value player__header__item__value--position">(.*?)</div>')
     birth_date_pattern = re.compile(r'class="player__header__item__value">(.*?)</div>')
-    age_pattern = re.compile(r'class="player__header__item__value">(.*?)</div>')
+    age_pattern = re.compile(r'<div class="player__header__item__header">Vek<span>&nbsp;</span></div><div class="player__header__item__value">(.*?)</div>')
     seasons_pattern = re.compile(r'class="player__career__item__value">(.*?)</div>')
 
     # Extract player details using regular expressions
